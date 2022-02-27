@@ -2,6 +2,9 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.Scanner;
+
+import javax.security.auth.x500.X500Principal;
+
 import java.io.FileWriter;
 
 
@@ -48,9 +51,6 @@ public class LinearSystem {
                 constant[i] = constant[i] - (mult * constant[k]);
             }
         }
-        for(int i = 0; i<4 ; i++){
-            System.out.println("The constant is"+constant[i] + " at i " + i);
-        }
     }
 
     //Back Substitution
@@ -60,12 +60,12 @@ public class LinearSystem {
         sol[n] = constant[n] / coeff[n][n];
         for(int i = n - 1; i >= 0 ; i--){
             double sum = constant[i];
-            System.out.println("The constant is " + sum);
             for(int j = i + 1; j <= n ;j++){
                 sum = sum - coeff[i][j] * sol[j];
             }
             sol[i] = sum/coeff[i][i];
         }
+        
     }
 
     //Naive Gaussian algorithm
@@ -75,19 +75,95 @@ public class LinearSystem {
         fillMatrix(4,consta,coeff);
         FwdElimination(coeff, consta);
         BackSubst(coeff, consta,sol);
+
+        //Write solutions to file 
         FileWriter writer = new FileWriter(System.getProperty("user.dir").concat("/sys1.sol"));
-        System.out.printf("\n The solutions are: %f - %f - %f - %f", sol[0],sol[1],sol[2],sol[3]);
+        for (int i = 0; i < sol.length; i++) {
+            writer.append("The value of x"+i + " is: "+sol[i] + "\t"+ "");
+         }
+        writer.close();
+        System.out.printf("\n The solutions are: x1 %.12f \t x2 %.12f \t x3 %.12f \t\t x4 %.12f", sol[0],sol[1],sol[2],sol[3]);
+    }
+
+    // Scaled Partial Pivoting
+    public static void SPPFwdElimination (double[][] coeff, double[] constant, int[] ind){
+        double[] scaling = new double[6];
+        int n = 4;
+
+        //Initialize index and scaling vectors
+        for (int i = 0; i < n; i++){
+            double smax = 0;
+            
+            for(int j = 0; j < n; j++){
+                smax = Math.max(smax, Math.abs(coeff[i][j]));
+            }
+
+            scaling[i] = smax;
+        }
+
+        for(int k = 0; k < n - 1; k++){
+            double rmax = 0;
+            int maxInd = k;
+
+            for(int i = k; i < n; i++){
+                double r = Math.abs(coeff[ind[i]][k] / scaling[ind[i]]);
+                if(r > rmax){
+                    rmax = r;
+                    maxInd = i;
+                }
+            }
+            
+            //swap
+            int temp = ind[maxInd];
+            ind[maxInd] = ind[k];
+            ind[k] = temp;
+
+            for(int i = k + 1; i < n; i++){
+                double mult = coeff[ind[i]][k] / coeff[ind[k]][k];
+
+                for(int j = k; j < n; j++){
+                    coeff[ind[i]][j] = coeff[ind[i]][j] - mult * coeff[ind[k]][j];
+                }
+
+                constant[ind[i]] = constant[ind[i]] - mult * constant[ind[k]];
+            }
+        }
+    }
+
+    // Back Substitution
+    public static void SPPBackSubst(double[][] coeff, double[] constant, double[] sol, int[] ind){
+        int n = 3;
+        sol[n] = constant[ind[n]] / coeff[ind[n]][n];
+        for(int i = n - 1; i >= 0 ; i--){
+            double sum = constant[ind[i]];
+            for(int j = i + 1; j <= n; j++){
+                sum = sum - coeff[ind[i]][j] * sol[j];
+            }
+            sol[i] = sum / coeff[ind[i]][i];
+        }
+    }
+
+    public static void SPPGaussian (double[][] coeff, double[] constant) throws IOException{
+        fillMatrix(4,constant,coeff);
+        double[] sol = new double[5];
+        int [] ind = new int[5];
+        int n = 4;
+        for(int i = 0; i < n; i++){
+            ind [i] = i;
+        }
+        SPPFwdElimination(coeff, constant, ind);
+        SPPBackSubst(coeff, constant, sol, ind);
+        System.out.printf("\n The solutions for SPP are: x1 %.8f \t x2 %.8f \t x3 %.8f \t\t x4 %.8f", sol[0],sol[1],sol[2],sol[3]);
     }
 
     public static void main(String[] args) throws IOException{
+        
         double[] constant = new double[4];
         double[][] coeff = new double[4][4];
         double[] sol = new double[4];
-        NaiveGaussian(coeff, constant);
-
-        for(int i = 0; i < 4; i++){
-            System.out.println("I is" + i);
-        }
+        System.out.println("The solutions for regular Gaussian Elimination are: ");
+        SPPGaussian(coeff, constant);
+        //NaiveGaussian(coeff, constant);
 
 
         /*
