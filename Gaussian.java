@@ -35,7 +35,7 @@ public class Gaussian {
 
     public static void FwdElimination(double[][] coeff, double[] constant){
 
-        int n = 4;
+        int n = coeff.length;
         for(int k = 0; k < n ; k++){
 
             for (int i = k + 1; i < n; i++){
@@ -53,7 +53,7 @@ public class Gaussian {
     //Back Substitution
 
     public static void BackSubst(double[][] coeff, double[] constant, double[] sol){
-        int n = 3;
+        int n = coeff.length - 1;
         sol[n] = constant[n] / coeff[n][n];
         for(int i = n - 1; i >= 0 ; i--){
             double sum = constant[i];
@@ -74,18 +74,20 @@ public class Gaussian {
         BackSubst(coeff, consta,sol);
 
         //Write solutions to file 
-        FileWriter writer = new FileWriter(System.getProperty("user.dir").concat("/sys1.sol"));
+        FileWriter writer = new FileWriter(System.getProperty("user.dir").concat("/sys1.sol"), true);
+        writer.append("The solutions for Naive Gaussian Elimination (no SPP) are: ");
         for (int i = 0; i < sol.length; i++) {
-            writer.append("The value of x"+i + " is: "+sol[i] + "\t"+ "");
+            writer.append("x"+ (i+1) + ": "+sol[i] + "\t"+ "");
          }
+        writer.append("\n");
         writer.close();
-        System.out.printf("\n The solutions are: x1 %.12f \t x2 %.12f \t x3 %.12f \t\t x4 %.12f", sol[0],sol[1],sol[2],sol[3]);
+        System.out.printf("The solutions for Naive Gaussian Elimination (no SPP) are: x1 %.12f \t x2 %.12f \t x3 %.12f \t\t x4 %.12f", sol[0],sol[1],sol[2],sol[3]);
     }
 
     // Scaled Partial Pivoting
     public static void SPPFwdElimination (double[][] coeff, double[] constant, int[] ind){
         double[] scaling = new double[6];
-        int n = 4;
+        int n = coeff.length;
 
         //Initialize index and scaling vectors
         for (int i = 0; i < n; i++){
@@ -129,7 +131,7 @@ public class Gaussian {
 
     // Back Substitution
     public static void SPPBackSubst(double[][] coeff, double[] constant, double[] sol, int[] ind){
-        int n = 3;
+        int n = coeff.length - 1;
         sol[n] = constant[ind[n]] / coeff[ind[n]][n];
         for(int i = n - 1; i >= 0 ; i--){
             double sum = constant[ind[i]];
@@ -153,12 +155,13 @@ public class Gaussian {
 
         //Write to file
         FileWriter writer = new FileWriter(System.getProperty("user.dir").concat("/sys1.sol"), true);
-        writer.append("\nThe solutions using SPP Gaussian Elimination are: ");
+        writer.append("\nThe solutions for Naive Gaussian Elimination with SPP are: ");
         for (int i = 0; i < sol.length; i++) {
-            writer.append("x"+i + " is: "+sol[i] + "\t"+ "");
+            writer.append("x"+ (i+1) + ": "+sol[i] + "\t"+ "");
          }
+        writer.append("\n");
         writer.close();
-        System.out.printf("\n The solutions for SPP are: x1 %.12f \t x2 %.12f \t x3 %.12f \t\t x4 %.12f", sol[0],sol[1],sol[2],sol[3]);
+        System.out.printf("The solutions for SPP are: x1 %.12f \t x2 %.12f \t x3 %.12f \t\t x4 %.12f", sol[0],sol[1],sol[2],sol[3]);
     }
 
     public static void main(String[] args) throws IOException{
@@ -166,13 +169,15 @@ public class Gaussian {
         double[] constant = new double[4];
         double[][] coeff = new double[4][4];
         double[] sol = new double[4];
-        fillMatrix(4,constant,coeff, args[0]);
-        System.out.println("The solutions for regular Gaussian Elimination are: ");
-        NaiveGaussian(coeff, constant);
-        fillMatrix(4,constant,coeff, args[0]);
-        System.out.println("The solutions for SPP Gaussian Elimination are: ");
-        SPPGaussian(coeff, constant);
-
+        if(args.length > 1){
+            if(args[1].equals("-spp")){
+                fillMatrix(4,constant,coeff, args[0]);
+                SPPGaussian(coeff, constant);
+            }
+        } else{
+            fillMatrix(4,constant,coeff, args[0]);
+            NaiveGaussian(coeff, constant);
+        }
 
         /*
         fillMatrix(4, constant, coeff);
