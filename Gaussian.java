@@ -7,8 +7,9 @@ import java.io.FileWriter;
 
 public class Gaussian {
     
+    static int numberVar = 0; //Number of variables solving for
     //Fill the matrix
-    public static void fillMatrix(double n, double[] constant, double [][] matrix, String fileName) throws IOException{
+    public static void fillMatrix(double[] constant, double [][] matrix, String fileName) throws IOException{
         FileReader file = null;
         try {
             file = new FileReader(System.getProperty("user.dir").concat("/"+fileName));
@@ -17,7 +18,7 @@ public class Gaussian {
         }
 
         Scanner readInput = new Scanner(file);
-        n = readInput.nextDouble();
+        numberVar = readInput.nextInt();
 
         for (int row = 0; row < 4; row++){
                 for (int col = 0; col < 4; col++){
@@ -35,7 +36,7 @@ public class Gaussian {
 
     public static void FwdElimination(double[][] coeff, double[] constant){
 
-        int n = coeff.length;
+        int n = numberVar;
         for(int k = 0; k < n ; k++){
 
             for (int i = k + 1; i < n; i++){
@@ -53,7 +54,7 @@ public class Gaussian {
     //Back Substitution
 
     public static void BackSubst(double[][] coeff, double[] constant, double[] sol){
-        int n = coeff.length - 1;
+        int n = numberVar - 1;
         sol[n] = constant[n] / coeff[n][n];
         for(int i = n - 1; i >= 0 ; i--){
             double sum = constant[i];
@@ -78,7 +79,7 @@ public class Gaussian {
         writer.append("The solutions for Naive Gaussian Elimination (no SPP) are: ");
         for (int i = 0; i < sol.length; i++) {
             writer.append("x"+ (i+1) + ": "+sol[i] + "\t"+ "");
-         }
+        }
         writer.append("\n");
         writer.close();
         System.out.printf("The solutions for Naive Gaussian Elimination (no SPP) are: x1 %.12f \t x2 %.12f \t x3 %.12f \t\t x4 %.12f", sol[0],sol[1],sol[2],sol[3]);
@@ -87,7 +88,7 @@ public class Gaussian {
     // Scaled Partial Pivoting
     public static void SPPFwdElimination (double[][] coeff, double[] constant, int[] ind){
         double[] scaling = new double[6];
-        int n = coeff.length;
+        int n = numberVar;
 
         //Initialize index and scaling vectors
         for (int i = 0; i < n; i++){
@@ -131,7 +132,7 @@ public class Gaussian {
 
     // Back Substitution
     public static void SPPBackSubst(double[][] coeff, double[] constant, double[] sol, int[] ind){
-        int n = coeff.length - 1;
+        int n = numberVar - 1;
         sol[n] = constant[ind[n]] / coeff[ind[n]][n];
         for(int i = n - 1; i >= 0 ; i--){
             double sum = constant[ind[i]];
@@ -171,11 +172,11 @@ public class Gaussian {
         double[] sol = new double[4];
         if(args.length > 1){
             if(args[1].equals("-spp")){
-                fillMatrix(4,constant,coeff, args[0]);
+                fillMatrix(constant,coeff, args[0]);
                 SPPGaussian(coeff, constant);
             }
         } else{
-            fillMatrix(4,constant,coeff, args[0]);
+            fillMatrix(constant,coeff, args[0]);
             NaiveGaussian(coeff, constant);
         }
 
